@@ -802,27 +802,32 @@ function buildOrderText(){
     city=parts.slice(1).join(" - ");
   }
 
+  const safe = v => String(v ?? "").trim();
+  const cut = (v, n) => safe(v).length > n ? safe(v).slice(0, n - 1) + "…" : safe(v);
+  const pad = (v, n) => cut(v, n).padEnd(n, " ");
+  const padL = (v, n) => cut(v, n).padStart(n, " ");
   const line = "----------------------------------------";
-  const padRight = (v, len) => String(v ?? "").slice(0, len).padEnd(len, " ");
-  const padLeft = (v, len) => String(v ?? "").slice(0, len).padStart(len, " ");
 
-  let text = "";
+  let text = "```\n";
   text += `Party Name : ${party}\n`;
   text += `Mobile No. : ${mobile}\n`;
   text += `City       : ${city}\n`;
   text += `${line}\n\n`;
-  text += `${padRight("No",3)} ${padRight("Part No",10)} ${padRight("Brand/Group",18)} ${padLeft("Qty",3)}\n`;
-  text += `${padRight("--",3)} ${padRight("-------",10)} ${padRight("-----------",18)} ${padLeft("---",3)}\n`;
+
+  text += `${pad("No",3)} ${pad("Part No",12)} ${pad("Brand/Group",16)} ${padL("Qty",3)}\n`;
+  text += `${line}\n`;
 
   orderItems.forEach((it,i)=>{
+    const no = i + 1;
     const part = getVal(it.row,"partno");
     const brand = getVal(it.row,"brand");
-    text += `${padRight(i+1,3)} ${padRight(part,10)} ${padRight(brand,18)} ${padLeft(it.qty,3)}\n`;
+    text += `${pad(no,3)} ${pad(part,12)} ${pad(brand,16)} ${padL(it.qty,3)}\n`;
   });
 
   text += `\n${line}\n`;
   text += `Total Qty : ${total}\n`;
   text += `Remark    : ${remark}\n`;
+  text += "```";
   return text;
 }
 
