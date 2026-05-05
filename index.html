@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAJ GROUP PRICE BOOK</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root{--blue:#0b4ea2;--dark-blue:#071d49;--orange:#f47b20;--bg:#f4f7fb;--card:#fff;--text:#122033;--muted:#697386;--border:#d8e0ec}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,var(--dark-blue),var(--blue));color:#fff;padding:18px 22px;border-bottom:5px solid var(--orange);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logoBox{width:86px;height:58px;border:2px solid rgba(255,255,255,.7);border-radius:12px;display:flex;align-items:center;justify-content:center;background:#fff;overflow:hidden}
+.logoBox img{max-width:100%;max-height:100%;object-fit:contain}
+header h1{margin:0;font-size:26px} header p{margin:4px 0 0;color:#e9f1ff}
+main{padding:18px;max-width:1550px;margin:auto}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(7,29,73,.08);margin-bottom:16px}
+.filters{display:grid;grid-template-columns:repeat(6,minmax(190px,1fr));gap:12px;margin-top:12px}
+label{font-size:13px;font-weight:700;color:var(--dark-blue);display:block;margin-bottom:6px}
+input,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
+button{border:0;background:var(--orange);color:#fff;padding:11px 15px;border-radius:10px;font-weight:700;cursor:pointer}
+button.secondary{background:var(--dark-blue)} button.activeView{background:var(--orange);box-shadow:0 0 0 3px rgba(244,123,32,.25)} button.whatsapp{background:#128c7e} button.danger{background:#9b1c1c}
+button:hover{filter:brightness(.96)}
+.hint{font-size:13px;color:var(--muted);line-height:1.45}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.stat{background:#eef4ff;border-left:5px solid var(--blue);padding:10px 13px;border-radius:10px;font-size:14px}
+.stat strong{color:var(--dark-blue)}
+.searchBox{position:relative;flex:1}
+.suggestBox{display:none;position:absolute;z-index:100;top:48px;left:0;right:0;max-height:310px;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 36px rgba(7,29,73,.18)}
+.suggestItem{padding:10px 12px;border-bottom:1px solid #eef2f7;cursor:pointer;font-size:14px}
+.suggestItem:hover{background:#f3f7ff}
+.multi{position:relative;min-height:43px}
+.multiBtn{width:100%;background:#fff;color:#111;border:1px solid var(--border);text-align:left;font-weight:400;display:flex;justify-content:space-between;gap:8px}
+.multiMenu{display:none;position:absolute;z-index:50;top:47px;left:0;right:0;max-height:320px;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 36px rgba(7,29,73,.18);padding:10px}
+.multi.open .multiMenu{display:block}
+.multiSearch{margin-bottom:8px;padding:10px}
+.multiOption{display:flex;gap:8px;align-items:center;padding:7px;border-radius:8px;font-size:13px;cursor:pointer}
+.multiOption:hover{background:#f3f7ff}
+.multiOption input{width:auto}
+.multiActions{display:none}
+.multiHint{font-size:12px;color:var(--muted);margin:4px 0 8px}
+.miniForm{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:10px;margin-top:12px}
+.orderHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.orderActions{display:flex;gap:10px;flex-wrap:wrap}
+.orderTableWrap,.tableWrap{overflow:auto;border:1px solid var(--border);border-radius:14px;background:#fff;margin-top:12px}
+.orderTableWrap{max-height:280px} .tableWrap{max-height:58vh}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th{position:sticky;top:0;background:var(--dark-blue);color:#fff;text-align:left;padding:11px;font-size:13px;white-space:nowrap;z-index:1}
+td{padding:10px;border-bottom:1px solid #eef2f7;font-size:13px;white-space:nowrap}
+.empty{text-align:center;color:var(--muted);padding:35px}
+.resultActionBar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px;padding:12px;background:#f5f8fc;border:1px solid var(--border);border-radius:14px}.resultSearch{display:flex;gap:8px;align-items:center;flex:1;min-width:260px}.resultSearch input{max-width:420px}.resultSummary{font-weight:700;color:var(--dark-blue)}.productGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px;padding:12px}
+.productCard{border:1px solid var(--border);border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 5px 16px rgba(7,29,73,.06)}
+.productImg{height:160px;background:#eef4ff;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;border-bottom:3px solid var(--orange)}
+.productImg img{max-width:100%;max-height:100%;object-fit:contain}
+.productBody{padding:12px}
+.productCode{font-weight:800;color:var(--dark-blue);font-size:15px;margin-bottom:5px}
+.productDesc{font-size:13px;line-height:1.35;min-height:36px;color:#25364d;margin-bottom:9px}
+.productMeta{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:10px}
+.metaItem{background:#f5f8fc;border:1px solid #e6edf6;border-radius:8px;padding:6px}
+.metaItem b{color:var(--dark-blue)}
+.cardActions,.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px}
+.qtyBox{display:flex;align-items:center;gap:6px}
+.qtyBtn{width:30px;height:30px;border-radius:8px;padding:0;background:var(--blue)}
+.qtyInput{width:58px;text-align:center;padding:8px;border:1px solid var(--border);border-radius:8px}
+.addBtn{padding:8px 11px;border-radius:8px;background:var(--orange)}
+.viewToggle,.pagerBtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.smallText{font-size:12px;color:var(--muted);margin-top:8px}
+.orderImagePreview{position:absolute;left:-99999px;top:0;width:900px;background:#fff;color:#071d49;padding:28px;font-family:Arial,Helvetica,sans-serif}
+.orderImageHeader{display:flex;align-items:center;gap:18px;border-bottom:4px solid var(--orange);padding-bottom:14px;margin-bottom:14px}
+.orderImageHeader img{width:90px;max-height:70px;object-fit:contain}
+.orderImageTitle{font-size:26px;font-weight:800}
+.orderImageMeta{font-size:15px;line-height:1.6;margin:12px 0}
+.orderImageTable{width:100%;border-collapse:collapse;margin-top:12px}
+.orderImageTable th{background:#071d49;color:#fff;padding:9px;text-align:left;font-size:13px}
+.orderImageTable td{border:1px solid #d8e0ec;padding:8px;font-size:13px;white-space:normal}
+.orderImageFooter{margin-top:18px;font-size:12px;color:#697386;text-align:center}
+.voiceWrap{display:flex;gap:6px;align-items:center}
+.voiceWrap input{flex:1}
+.micBtn{min-width:42px;height:42px;border-radius:10px;padding:0;background:var(--blue);font-size:18px}
+.manualFallback{margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:12px;background:#fbfdff}
+@media(max-width:1100px){.filters{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.filters,.miniForm{grid-template-columns:1fr} header h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logoBox"><img id="mainLogo" src="assets/logo/LOGO.png" onerror="this.src='assets/logo/logo.png'" alt="RAJ GROUP"></div>
+  <div><h1>RAJ GROUP PRICE BOOK</h1><p>Folder data auto-load, customer dropdown, searchable multi-select filters और order PDF के साथ</p></div>
+</header>
+
+<main>
+<section class="panel">
+  <h2 style="margin:0 0 12px;color:var(--dark-blue);font-size:20px;">Customer Selection</h2>
+  <div class="voiceWrap">
+    <div class="searchBox">
+      <input type="text" id="customerSearchInput" placeholder="Customer name search करें जैसे Ambika Motors..." autocomplete="off">
+      <div class="suggestBox" id="customerSuggest"></div>
+    </div>
+    <button class="micBtn" type="button" onclick="startVoiceSearch('customerSearchInput', true, this)">🎤</button>
+    <button onclick="selectTypedCustomer()">Select Customer</button>
+  </div>
+  <div class="stats"><div class="stat">Selected Customer: <strong id="selectedCustomerText">Not selected</strong></div></div>
+  <p class="hint">Customer data auto-load path: <b>data/customers.csv</b>. Name type करते ही related customers dropdown में दिखेंगे.</p>
+</section>
+
+<section class="panel">
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+    <div>
+      <h2 style="margin:0;color:var(--dark-blue);font-size:20px;">Product Search</h2>
+      <p class="hint" style="margin:6px 0 0">Product data auto-load path: <b>data/pricebook.csv</b>. Headers screenshot जैसे हों तो भी काम करेगा: Brand, PartNo, Company, Description, Unit, HSN, Rate, GST, MRP, Packing Size, Standard Packing, Segment, VehicleBrand, Model.</p>
+    </div>
+    <button class="secondary" onclick="downloadFilteredPriceBookPdf()">Download Filtered Price Book PDF</button>
+  </div>
+
+  <div class="filters">
+    <div><label>Brand / Group</label><div class="multi" id="brandMulti"></div></div>
+    <div><label>Part Number</label><div class="multi" id="partnoMulti"></div></div>
+    <div><label>Segment</label><div class="multi" id="segmentMulti"></div></div>
+    <div><label>Vehicle Brand</label><div class="multi" id="vehicleBrandMulti"></div></div>
+    <div><label>Model</label><div class="multi" id="modelMulti"></div></div>
+    <div>
+      <label>Universal Search</label>
+      <div class="voiceWrap">
+        <input type="text" id="searchInput" placeholder="Part No, Code, Description, गाड़ी...">
+        <button class="micBtn" type="button" onclick="startVoiceSearch('searchInput', false, this)">🎤</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">Total Products: <strong id="totalCount">0</strong></div>
+    <div class="stat">Showing: <strong id="showingCount">0</strong></div>
+    <div class="stat">Status: <strong id="statusText">Loading folder data...</strong></div>
+  </div>
+  <div class="manualFallback">
+    <b>Note:</b> अगर browser direct file open में CSV block करे तो local server चलाएँ: <code>python -m http.server 8000</code>. Emergency के लिए manual CSV upload:
+    <input type="file" id="manualProductFile" accept=".csv,.xlsx,.xls" style="max-width:360px;margin-left:10px">
+  </div>
+  <div class="viewToggle">
+    <button id="cardViewBtn" class="secondary activeView" onclick="setProductView('card')">Card View</button>
+    <button id="tableViewBtn" class="secondary" onclick="setProductView('table')">Table View</button>
+    <button class="whatsapp" onclick="addAllVisibleToOrder()">Add All Visible</button>
+    <button onclick="clearFilters()">Clear Filters</button>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="orderHead">
+    <div><h2 style="margin:0;color:var(--dark-blue);font-size:20px;">Order Ready</h2><div><b>Total Quantity:</b> <span id="totalQty">0</span></div></div>
+    <div class="orderActions">
+      <button class="whatsapp" onclick="shareOrderWhatsApp()">Share Order WhatsApp</button>
+      <button class="secondary" onclick="downloadOrderFiles()">Download Order</button>
+      <button class="danger" onclick="clearOrder()">Clear Order</button>
+    </div>
+  </div>
+  <div class="miniForm">
+    <div><label>Order Date</label><input type="date" id="orderDate"></div>
+    <div><label>Customer Name / Shop</label><input type="text" id="customerName" placeholder="Customer select करें"></div>
+    <div><label>Customer Mobile</label><input type="text" id="customerMobile" placeholder="Optional"></div>
+    <div style="grid-column:1/-1"><label>Remark</label><input type="text" id="orderRemark" placeholder="Order remark लिखें, optional"></div>
+  </div>
+  <div class="orderTableWrap"><table id="orderTable"><thead></thead><tbody></tbody></table></div>
+  <div class="smallText">Share Order WhatsApp अब text-only भेजेगा. Download Order से PDF download होगी.</div>
+</section>
+
+<section class="panel">
+  <div class="resultActionBar">
+    <div class="resultSummary" id="visibleSummary">Visible products: 0 | Qty total: 0</div>
+    <div class="resultSearch">
+      <input type="text" id="resultSearchInput" placeholder="Search within selected results: PartNo, Description, Model..." oninput="applyResultSearch()">
+      <button class="secondary" onclick="clearResultSearch()">Clear Search</button>
+    </div>
+    <button class="whatsapp" onclick="addAllVisibleToOrder()">Add All Visible to Order</button>
+  </div>
+  <div id="productCards" class="productGrid"></div>
+  <div class="tableWrap" id="productTableWrap" style="display:none"><table id="dataTable"><thead></thead><tbody></tbody></table></div>
+  <div class="pager">
+    <div id="pageInfo" class="hint">Page 0 / 0</div>
+    <div class="pagerBtns">
+      <button class="secondary" onclick="goPage('first')">First</button>
+      <button class="secondary" onclick="goPage('prev')">Previous</button>
+      <button class="secondary" onclick="goPage('next')">Next</button>
+      <button class="secondary" onclick="goPage('last')">Last</button>
+    </div>
+  </div>
+</section>
+<div id="orderImagePreview" class="orderImagePreview"></div>
+</main>
+
+<script>
+const PATHS = {
+  logo: ["assets/logo/LOGO.png","assets/logo/logo.png"],
+  pricebook: ["data/pricebook.csv","data/Pricebook.csv","data/PRICEBOOK.csv","data/product.csv","data/Product.csv","data/products.csv","data/Products.csv","data/PRODUCTS.csv","pricebook.csv","Product.csv","Products.csv"],
+  customers: ["data/customers.csv","data/Customers.csv","data/Customer.csv","data/CUSTOMER.csv","data/CUSTOMERS.csv","data/customer.csv","Customer.csv","Customers.csv","customers.csv"],
+  productImages: "assets/product-images/"
+};
+const IMAGE_MANIFEST = {"aa1001": "AA1001.png", "aa1002": "AA1002.png", "aa1004": "AA1004.png", "aa1005": "AA1005.png", "aa1006": "AA1006.png", "aa1007": "AA1007.png", "aa1008": "AA1008.png", "aa1009": "AA1009.png", "aa1010": "AA1010.png", "aa1011": "AA1011.png", "aa1012": "AA1012.png", "aa1013": "AA1013.png", "aa1014": "AA1014.png", "aa1015": "AA1015.png", "aa1016": "AA1016.png", "aa1017": "AA1017.png", "aa1018": "AA1018.png", "aa1019": "AA1019.png", "aa1020": "AA1020.png", "aa1021": "AA1021.png", "aa1022": "AA1022.png", "aa1023": "AA1023.png", "aa1024": "AA1024.png", "aa1025": "AA1025.png", "aa1026": "AA1026.png", "aa1027": "AA1027.png", "aa1029": "AA1029.png", "aa1031": "AA1031.png", "aa1032": "AA1032.png", "aa1033": "AA1033.png", "aa1035": "AA1035.png", "aa1036": "AA1036.png", "aa1037": "AA1037.png", "aa1038": "AA1038.png", "aa1039": "AA1039.png", "aa1041": "AA1041.png", "aa1042": "AA1042.png", "aa1043": "AA1043.png", "aa1045": "AA1045.png", "aa1046": "AA1046.png", "aa2001": "AA2001.png", "aa2002": "AA2002.png", "aa2003": "AA2003.png", "aa201": "AA201.png", "aa202": "AA202.png", "aa203": "AA203.png", "aa2601": "AA2601.png", "aa3001": "AA3001.png", "aa3002": "AA3002.png", "aa3003": "AA3003.png", "aa3004": "AA3004.png", "aa3005": "AA3005.png", "aa3006": "AA3006.png", "aa3007": "AA3007.png", "aa3008": "AA3008.png", "aa3009": "AA3009.png", "aa301": "AA301.png", "aa3010": "AA3010.png", "aa3011": "AA3011.png", "aa3012": "AA3012.png", "aa3013": "AA3013.png", "aa3014": "AA3014.png", "aa3015": "AA3015.png", "aa3017": "AA3017.png", "aa3018": "AA3018.png", "aa3020": "AA3020.png", "aa3021": "AA3021.png", "aa3022": "AA3022.png", "aa3023": "AA3023.png", "aa3024": "AA3024.png", "aa3025": "AA3025.png", "aa3026": "AA3026.png", "aa4001": "AA4001.png", "aa4002": "AA4002.png", "aa4003": "AA4003.png", "aa5001": "AA5001.png", "aa6001": "AA6001.png", "aa6003": "AA6003.png", "aa601": "AA601.png", "aa602": "AA602.png", "aa603": "AA603.png", "aa604": "AA604.png", "aa605": "AA605.png", "aa606": "AA606.png", "aa7001": "AA7001.png", "aa7002": "AA7002.png", "aa7003": "AA7003.png", "aa7004": "AA7004.png", "aa7005": "AA7005.png", "aa7006": "AA7006.png", "aa7007": "AA7007.png", "aa7008": "AA7008.png", "aa7009": "AA7009.png", "aa7010": "AA7010.png", "aa7011": "AA7011.png", "aa7012": "AA7012.png", "aa7014": "AA7014.png", "aa7015": "AA7015.png", "aa7016": "AA7016.png", "aayubflywheelassy": "AAYUB FLYWHEEL ASSY.png", "aybfr002": "AYBFR002.png", "aybfr031": "AYBFR031.png", "aa2101": "aa2101.png"};
+
+let allRows=[], filteredRows=[], headers=[], customerRows=[], selectedCustomer=null, orderItems=[];
+let currentPage=1, rowsPerPage=10, productView='card', logoDataURL=null;
+let resultSearchText='';
+let showProductsAfterAdd=false;
+let selectedFilters={brand:[], partno:[], segment:[], vehiclebrand:[], model:[]};
+const segmentList=["Two Wheeler","Three Wheeler","Car","HCV","LCV","Earth Movers","Agricultural","Industrial Parts"];
+const HEAVY_FILTER_LIMIT = 15;
+
+function norm(s){return String(s??"").trim()}
+function key(s){return norm(s).toLowerCase().replace(/[^a-z0-9]/g,"")}
+function escapeHtml(str){return String(str??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function setStatus(t){document.getElementById("statusText").textContent=t}
+const aliases={
+ brand:["brand","brands","group","product brand","productbrand"],
+ segment:["segment","segmernt","category","vehicle segment"],
+ vehiclebrand:["vehiclebrand","vehicle brand","vehiclebr","vehicle br","vehicle_brand","make","vehicle make","company"],
+ model:["model","vehicle model"],
+ partno:["partno","part no","part_no","part number","partnumber","item code","sku","code","product code","productcode"],
+ description:["description","descriptio","desc","item description","product description"],
+ price:["price","rate","selling price","list price"],
+ mrp:["mrp","m.r.p","maximum retail price"],
+ gst:["gst","gst %","gst%","tax"],
+ hsn:["hsn","hsn code","hsncode"],
+ packing:["packing","standard packing","standard p","standardp","std packing","packaging","standardpacking"],
+ packsize:["pack size","packing size","packing si","packingsi","packingsize","pack_size","size","unit"]
+};
+function findHeader(type){const a=(aliases[type]||[]).map(key);return headers.find(h=>a.includes(key(h)))||null}
+function getVal(row,type){const h=findHeader(type);return h?norm(row[h]):""}
+function splitMultiValue(v){return String(v||"").split(/[,;|/]+/).map(x=>norm(x)).filter(Boolean)}
+function getMultiVals(row,type){return splitMultiValue(getVal(row,type))}
+function multiHas(row,type,selectedArr){if(!selectedArr||!selectedArr.length)return true; const vals=getMultiVals(row,type).map(key); return selectedArr.some(s=>vals.includes(key(s)))}
+function productImageUrl(row){const code=key(getVal(row,"partno")); const file=IMAGE_MANIFEST[code]; if(file) return PATHS.productImages + encodeURIComponent(file); return PATHS.productImages + encodeURIComponent(getVal(row,"partno")+".png")}
+
+async function fetchFirst(paths){
+  let lastErr;
+  for(const rawUrl of paths){
+    const candidates=[rawUrl, rawUrl.split("/").map(encodeURIComponent).join("/")];
+    for(const url of candidates){
+      try{
+        const r=await fetch(url+"?v="+Date.now());
+        if(r.ok) return await r.arrayBuffer();
+        lastErr=new Error(url+" HTTP "+r.status);
+      }catch(e){lastErr=e}
+    }
+  }
+  throw lastErr||new Error("file not found");
+}
+function readWorkbookFromArrayBuffer(data){return XLSX.read(data,{type:"array"})}
+async function loadWorkbookFromPaths(paths){const data=await fetchFirst(paths); return readWorkbookFromArrayBuffer(data)}
+async function loadLogoDataUrl(){for(const url of PATHS.logo){try{const r=await fetch(url); if(!r.ok) continue; const b=await r.blob(); logoDataURL=await new Promise(res=>{const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(b)}); document.getElementById("mainLogo").src=url; return}catch(e){}}}
+
+function getCustomerVal(row,names){const ks=names.map(key); const h=Object.keys(row).find(k=>ks.includes(key(k))); return h?norm(row[h]):""}
+function customerDisplay(r){const n=getCustomerVal(r,["customer name","customer","party name","party","dealer name","dealer","shop name","shop","name"]); const c=getCustomerVal(r,["city","place","location","area"]); const m=getCustomerVal(r,["mobile","phone","contact","contact no","mobile no"]); return [n,c,m].filter(Boolean).join(" - ")}
+function updateCustomerSuggestions(){const input=document.getElementById("customerSearchInput"); const box=document.getElementById("customerSuggest"); const q=key(input.value); if(!q){box.style.display="none"; box.innerHTML=""; return} if(!customerRows.length){box.innerHTML='<div class="suggestItem">Customer file not loaded</div>'; box.style.display="block"; return} const matches=customerRows.filter(r=>key(customerDisplay(r)).includes(q)).slice(0,50); if(!matches.length){box.innerHTML='<div class="suggestItem">No customer found</div>'; box.style.display="block"; return} box.innerHTML=matches.map((r)=>`<div class="suggestItem" onclick="pickCustomer(${customerRows.indexOf(r)})">${escapeHtml(customerDisplay(r))}</div>`).join(""); box.style.display="block"}
+function pickCustomer(idx){selectedCustomer=customerRows[idx]; document.getElementById("customerSearchInput").value=customerDisplay(selectedCustomer); document.getElementById("customerSuggest").style.display="none"; applySelectedCustomer()}
+function selectTypedCustomer(){const typed=norm(document.getElementById("customerSearchInput").value).toLowerCase(); if(!typed){alert("Customer name search/select करें");return}; let m=customerRows.find(r=>customerDisplay(r).toLowerCase()===typed)||customerRows.find(r=>customerDisplay(r).toLowerCase().includes(typed)); selectedCustomer=m||{manualName:document.getElementById("customerSearchInput").value}; applySelectedCustomer()}
+function applySelectedCustomer(){let name="",city="",mobile=""; if(selectedCustomer?.manualName){name=selectedCustomer.manualName} else if(selectedCustomer){name=getCustomerVal(selectedCustomer,["customer name","customer","party name","party","dealer name","dealer","shop name","shop","name"]);city=getCustomerVal(selectedCustomer,["city","place","location","area"]);mobile=getCustomerVal(selectedCustomer,["mobile","phone","contact","contact no","mobile no"])} document.getElementById("selectedCustomerText").textContent=[name,city,mobile].filter(Boolean).join(" - ")||"Not selected"; document.getElementById("customerName").value=[name,city].filter(Boolean).join(" - "); document.getElementById("customerMobile").value=mobile}
+
+function optionRowsFor(type){
+  return allRows.filter(r=>{
+    // Cascading order: Brand -> Part Number -> Segment -> Vehicle Brand -> Model
+    if(type!=="brand"){
+      if(!multiHas(r,"brand",selectedFilters.brand)) return false;
+    }
+    if(type!=="partno"){
+      if(!multiHas(r,"partno",selectedFilters.partno)) return false;
+    }
+    if(type!=="segment"){
+      if(!multiHas(r,"segment",selectedFilters.segment)) return false;
+    }
+    if(type!=="vehiclebrand"){
+      if(!multiHas(r,"vehiclebrand",selectedFilters.vehiclebrand)) return false;
+    }
+    if(type!=="model"){
+      if(!multiHas(r,"model",selectedFilters.model)) return false;
+    }
+    return true;
+  });
+}
+function uniqueOptions(type){
+  let vals=[];
+  vals=optionRowsFor(type).flatMap(r=>getMultiVals(r,type));
+  return [...new Set(vals.filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+}
+function renderMulti(id,type,label){
+  const root=document.getElementById(id);
+  const opts=uniqueOptions(type);
+  selectedFilters[type]=selectedFilters[type].filter(v=>opts.map(key).includes(key(v)));
+  const count=selectedFilters[type].length;
+  const selectedText=count ? selectedFilters[type].slice(0,2).join(", ")+(count>2?" +"+(count-2):"") : "All "+label;
+  root.className="multi";
+  root.dataset.type=type;
+  root.dataset.label=label;
+  root._allOptions = opts;
+
+  const isHeavy = type==="vehiclebrand" || type==="model";
+  const shownOpts = isHeavy ? opts.slice(0, HEAVY_FILTER_LIMIT) : opts;
+  const hint = isHeavy
+    ? `पहले ${Math.min(HEAVY_FILTER_LIMIT, opts.length)} options दिख रहे हैं. Search करके बाकी options देखें.`
+    : `Search करके checkbox select करें. Multiple select कर सकते हैं; dropdown खुला रहेगा.`;
+
+  root.innerHTML=`<button class="multiBtn" type="button" onclick="toggleMulti('${id}')"><span>${escapeHtml(selectedText)}</span><span>▼</span></button>
+  <div class="multiMenu" onclick="event.stopPropagation()">
+    <input class="multiSearch" placeholder="Search ${label}..." oninput="filterMultiOptions(this)" onclick="event.stopPropagation()">
+    <div class="multiHint">${hint}</div>
+    <div class="multiOptions">${shownOpts.map(v=>multiOptionHtml(type,v)).join("")}</div>
+  </div>`;
+}
+
+function multiOptionHtml(type,v){
+  return `<label class="multiOption" onclick="event.stopPropagation()"><input type="checkbox" value="${escapeHtml(v)}" ${selectedFilters[type].some(s=>key(s)===key(v))?"checked":""} onchange="toggleFilterValue('${type}',this.value)"> <span>${escapeHtml(v)}</span></label>`;
+}
+
+function filterMultiOptions(inp){
+  const root = inp.closest(".multi");
+  const type = root.dataset.type;
+  const opts = root._allOptions || [];
+  const q = key(inp.value);
+  const isHeavy = type==="vehiclebrand" || type==="model";
+  let show = q ? opts.filter(v=>key(v).includes(q)) : (isHeavy ? opts.slice(0, HEAVY_FILTER_LIMIT) : opts);
+  if(isHeavy && q) show = show.slice(0, 80); // search result max 80 for speed
+  root.querySelector(".multiOptions").innerHTML = show.length
+    ? show.map(v=>multiOptionHtml(type,v)).join("")
+    : `<div class="multiOption">No match found</div>`;
+}
+function refreshAllMultis(){
+  renderMulti("brandMulti","brand","Brands");
+  renderMulti("partnoMulti","partno","Part Numbers");
+  renderMulti("segmentMulti","segment","Segments");
+  renderMulti("vehicleBrandMulti","vehiclebrand","Vehicle Brands");
+  renderMulti("modelMulti","model","Models");
+}
+function toggleMulti(id){
+  const el=document.getElementById(id);
+  const wasOpen=el.classList.contains("open");
+  document.querySelectorAll(".multi").forEach(m=>{if(m.id!==id)m.classList.remove("open")});
+  if(wasOpen) el.classList.remove("open"); else el.classList.add("open");
+}
+function toggleFilterValue(type,value){
+  showProductsAfterAdd=true;
+  const exists=selectedFilters[type].some(v=>key(v)===key(value));
+  if(exists) selectedFilters[type]=selectedFilters[type].filter(v=>key(v)!==key(value));
+  else selectedFilters[type].push(value);
+
+  // Downstream filters reset so next dropdown shows only relevant data.
+  if(type==="brand"){
+    selectedFilters.partno=[];
+    selectedFilters.segment=[];
+    selectedFilters.vehiclebrand=[];
+    selectedFilters.model=[];
+  }
+  if(type==="partno"){
+    selectedFilters.segment=[];
+    selectedFilters.vehiclebrand=[];
+    selectedFilters.model=[];
+  }
+  if(type==="segment"){
+    selectedFilters.vehiclebrand=[];
+    selectedFilters.model=[];
+  }
+  if(type==="vehiclebrand"){
+    selectedFilters.model=[];
+  }
+
+  const openId = document.querySelector(".multi.open")?.id || null;
+  refreshAllMultis();
+  if(openId) document.getElementById(openId)?.classList.add("open");
+  applyFilters(false);
+}
+function changeMulti(type,cb){toggleFilterValue(type,cb.value)}
+function clearMulti(type){selectedFilters[type]=[]; refreshAllMultis(); applyFilters(false)}
+function selectAllVisible(id,type){/* removed */}
+document.addEventListener("click",e=>{if(!e.target.closest(".multi"))document.querySelectorAll(".multi").forEach(m=>m.classList.remove("open")); if(!e.target.closest(".searchBox"))document.getElementById("customerSuggest").style.display="none"})
+
+function clearFilters(hideProducts=false){
+  selectedFilters={brand:[],partno:[],segment:[],vehiclebrand:[],model:[]};
+  document.getElementById("searchInput").value="";
+  resultSearchText="";
+  const rsi=document.getElementById("resultSearchInput"); if(rsi) rsi.value="";
+  currentPage=1;
+  showProductsAfterAdd = !hideProducts;
+  refreshAllMultis();
+  applyFilters(false);
+}
+
+function applyResultSearch(){
+  resultSearchText = document.getElementById("resultSearchInput")?.value || "";
+  currentPage = 1;
+  renderProducts();
+}
+
+function clearResultSearch(){
+  resultSearchText = "";
+  const el=document.getElementById("resultSearchInput");
+  if(el) el.value="";
+  currentPage = 1;
+  renderProducts();
+}
+
+function getDisplayRows(){
+  const qRaw = norm(resultSearchText).toLowerCase();
+  const q = key(qRaw);
+  if(!q) return filteredRows;
+  return filteredRows.filter(row=>{
+    const hayRaw = headers.map(h=>row[h]).join(" ").toLowerCase();
+    const hay = hayRaw.replace(/[^a-z0-9]/g,"");
+    if(hay.includes(q)) return true;
+    const words = qRaw.split(/\s+/).map(w=>key(w)).filter(Boolean);
+    return words.length > 1 && words.every(w=>hay.includes(w));
+  });
+}
+
+function hasAnyProductFilter(){
+  return selectedFilters.brand.length || selectedFilters.partno.length || selectedFilters.segment.length ||
+         selectedFilters.vehiclebrand.length || selectedFilters.model.length || key(document.getElementById("searchInput").value);
+}
+
+
+function applyResultSearch(){
+  resultSearchText = document.getElementById("resultSearchInput")?.value || "";
+  currentPage = 1;
+  renderProducts();
+}
+
+function clearResultSearch(){
+  resultSearchText = "";
+  const el=document.getElementById("resultSearchInput");
+  if(el) el.value="";
+  currentPage = 1;
+  renderProducts();
+}
+
+function getDisplayRows(){
+  const qRaw = norm(resultSearchText).toLowerCase();
+  const q = key(qRaw);
+  if(!q) return filteredRows;
+  return filteredRows.filter(row=>{
+    const hayRaw = headers.map(h=>row[h]).join(" ").toLowerCase();
+    const hay = hayRaw.replace(/[^a-z0-9]/g,"");
+    if(hay.includes(q)) return true;
+    const words = qRaw.split(/\s+/).map(w=>key(w)).filter(Boolean);
+    return words.length > 1 && words.every(w=>hay.includes(w));
+  });
+}
+
+function hasAnyProductFilter(){
+  return selectedFilters.brand.length || selectedFilters.partno.length || selectedFilters.segment.length ||
+         selectedFilters.vehiclebrand.length || selectedFilters.model.length || key(document.getElementById("searchInput").value);
+}
+
+function rowMatchesUniversalSearch(row, rawQuery){
+  const qRaw = norm(rawQuery).toLowerCase();
+  const q = key(qRaw);
+  if(!q) return true;
+
+  const hayRaw = headers.map(h=>row[h]).join(" ").toLowerCase();
+  const hay = hayRaw.replace(/[^a-z0-9]/g,"");
+
+  // Normal direct search: KX525, AIR FILTER, description, model, brand, rate etc.
+  if(hay.includes(q)) return true;
+
+  // Word-wise search: "air filter" should match rows containing both air and filter anywhere.
+  const words = qRaw.split(/\s+/).map(w=>key(w)).filter(Boolean);
+  if(words.length > 1 && words.every(w=>hay.includes(w))) return true;
+
+  return false;
+}
+
+function applyFilters(refresh=true){
+  currentPage=1;
+  const rawQ=document.getElementById("searchInput").value;
+  const q=key(rawQ);
+  const hasFilter = hasAnyProductFilter();
+
+  if(!hasFilter && !showProductsAfterAdd){
+    filteredRows=[];
+    if(refresh) refreshAllMultis();
+    renderProducts();
+    return;
+  }
+
+  // Universal Search is GLOBAL: if user types anything, search full product master
+  // and ignore Brand/Part/Segment/Vehicle/Model selected filters.
+  if(q){
+    filteredRows=allRows.filter(r=>rowMatchesUniversalSearch(r, rawQ));
+    renderProducts();
+    return;
+  }
+
+  filteredRows=allRows.filter(r=>{
+    if(!multiHas(r,"brand",selectedFilters.brand)) return false;
+    if(!multiHas(r,"partno",selectedFilters.partno)) return false;
+    if(!multiHas(r,"segment",selectedFilters.segment)) return false;
+    if(!multiHas(r,"vehiclebrand",selectedFilters.vehiclebrand)) return false;
+    if(!multiHas(r,"model",selectedFilters.model)) return false;
+    return true;
+  });
+  if(refresh) refreshAllMultis();
+  renderProducts();
+}
+
+function meta(row,label,type){const v=getVal(row,type); return v?`<div class="metaItem"><b>${label}:</b> ${escapeHtml(v)}</div>`:""}
+function setProductView(v){
+  productView=v;
+  document.getElementById("cardViewBtn")?.classList.toggle("activeView", v==="card");
+  document.getElementById("tableViewBtn")?.classList.toggle("activeView", v==="table");
+  renderProducts();
+}
+function renderProducts(){ setTimeout(updateVisibleSummary,0); const displayRows=getDisplayRows(); document.getElementById("totalCount").textContent=allRows.length.toLocaleString("en-IN"); document.getElementById("showingCount").textContent=displayRows.length.toLocaleString("en-IN"); const totalPages=Math.max(1,Math.ceil(displayRows.length/rowsPerPage)); if(currentPage>totalPages)currentPage=totalPages; const start=(currentPage-1)*rowsPerPage; const rows=displayRows.slice(start,start+rowsPerPage); document.getElementById("pageInfo").textContent=displayRows.length?`Showing ${start+1} - ${Math.min(start+rowsPerPage,displayRows.length)} of ${displayRows.length.toLocaleString("en-IN")} | Page ${currentPage} / ${totalPages}`:"Page 0 / 0";
+ const cards=document.getElementById("productCards"), tableWrap=document.getElementById("productTableWrap"); if(!rows.length){cards.innerHTML='<div class="empty">Filter/Search select करें, products यहाँ दिखेंगे</div>'; document.querySelector("#dataTable tbody").innerHTML='<tr><td class="empty">No matching products</td></tr>'; return}
+ if(productView==="card"){cards.style.display="grid"; tableWrap.style.display="none"; cards.innerHTML=rows.map(row=>{const idx=allRows.indexOf(row); const img=productImageUrl(row); return `<div class="productCard"><div class="productImg">${img?`<img src="${img}" onerror="this.style.display='none';this.parentNode.append('No Image')">`:"No Image"}</div><div class="productBody"><div class="productCode">${escapeHtml(getVal(row,"partno"))}</div><div class="productDesc">${escapeHtml(getVal(row,"description"))}</div><div class="productMeta">${[meta(row,"Brand","brand"),meta(row,"Segment","segment"),meta(row,"Vehicle","vehiclebrand"),meta(row,"Model","model"),meta(row,"Unit","packsize"),meta(row,"Packing","packing"),meta(row,"Rate","price"),meta(row,"MRP","mrp"),meta(row,"GST","gst"),meta(row,"HSN","hsn")].filter(Boolean).join("")}</div><div class="cardActions"><div class="qtyBox"><button class="qtyBtn" onclick="changeRowQty(${idx},-1)">-</button><input class="qtyInput" id="qty_${idx}" type="number" min="1" value="1" oninput="updateVisibleSummary()"><button class="qtyBtn" onclick="changeRowQty(${idx},1)">+</button></div><button class="addBtn" onclick="addToOrder(${idx})">Add</button></div></div></div>`}).join(""); return}
+ cards.style.display="none"; tableWrap.style.display="block"; const cols=["Image","Qty","Add"].concat(headers); document.querySelector("#dataTable thead").innerHTML="<tr>"+cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")+"</tr>"; document.querySelector("#dataTable tbody").innerHTML=rows.map(row=>{const idx=allRows.indexOf(row), img=productImageUrl(row); return "<tr>"+`<td>${img?`<img src="${img}" style="width:55px;height:55px;object-fit:contain">`:""}</td><td><div class="qtyBox"><button class="qtyBtn" onclick="changeRowQty(${idx},-1)">-</button><input class="qtyInput" id="qty_${idx}" type="number" min="1" value="1" oninput="updateVisibleSummary()"><button class="qtyBtn" onclick="changeRowQty(${idx},1)">+</button></div></td><td><button class="addBtn" onclick="addToOrder(${idx})">Add</button></td>`+headers.map(h=>`<td>${escapeHtml(row[h])}</td>`).join("")+"</tr>"}).join("")}
+function goPage(a){const displayRows=getDisplayRows(); const totalPages=Math.max(1,Math.ceil(displayRows.length/rowsPerPage)); if(a==="first")currentPage=1;if(a==="prev")currentPage=Math.max(1,currentPage-1);if(a==="next")currentPage=Math.min(totalPages,currentPage+1);if(a==="last")currentPage=totalPages;renderProducts()}
+
+function changeRowQty(i,d){const el=document.getElementById("qty_"+i); if(!el)return; let v=parseInt(el.value||"1")+d; if(v<1)v=1; el.value=v; updateVisibleSummary()}
+function rowKey(row){return [getVal(row,"partno"),getVal(row,"brand"),getVal(row,"description")].join("|")}
+
+function getCurrentVisibleRows(){
+  const displayRows = getDisplayRows();
+  const totalPages=Math.max(1,Math.ceil(displayRows.length/rowsPerPage));
+  if(currentPage>totalPages) currentPage=totalPages;
+  const start=(currentPage-1)*rowsPerPage;
+  return displayRows.slice(start,start+rowsPerPage);
+}
+
+function addRowToOrderByIndex(i, shouldReset=false){
+  if(!document.getElementById("customerName").value){
+    alert("पहले Customer select करें");
+    return false;
+  }
+  const row=allRows[i];
+  if(!row) return false;
+  const qty=Math.max(1,parseInt(document.getElementById("qty_"+i)?.value||"1"));
+  const k=rowKey(row);
+  const ex=orderItems.find(x=>x.k===k);
+  if(ex) ex.qty+=qty;
+  else orderItems.push({k,row,qty});
+  if(shouldReset){
+    renderOrder();
+    clearFilters(true);
+  }
+  return true;
+}
+
+function addAllVisibleToOrder(){
+  const rows=getCurrentVisibleRows();
+  if(!rows.length){
+    alert("Add करने के लिए कोई product visible नहीं है.");
+    return;
+  }
+  if(!document.getElementById("customerName").value){
+    alert("पहले Customer select करें");
+    return;
+  }
+  rows.forEach(row=>{
+    const idx=allRows.indexOf(row);
+    const qty=Math.max(1,parseInt(document.getElementById("qty_"+idx)?.value||"1"));
+    const k=rowKey(row);
+    const ex=orderItems.find(x=>x.k===k);
+    if(ex) ex.qty+=qty;
+    else orderItems.push({k,row,qty});
+  });
+  renderOrder();
+  clearFilters(true);
+}
+
+
+function updateVisibleSummary(){
+  let rows = [];
+  try { rows = getCurrentVisibleRows(); } catch(e) { rows = []; }
+  let qtyTotal = 0;
+  rows.forEach(row=>{
+    const idx=allRows.indexOf(row);
+    qtyTotal += Math.max(1,parseInt(document.getElementById("qty_"+idx)?.value||"1"));
+  });
+  const el=document.getElementById("visibleSummary");
+  if(el) el.textContent = `Visible products: ${rows.length} | Qty total: ${qtyTotal}`;
+}
+
+function addToOrder(i){addRowToOrderByIndex(i,true)}
+function renderOrder(){const total=orderItems.reduce((s,i)=>s+i.qty,0); document.getElementById("totalQty").textContent=total.toLocaleString("en-IN"); const cols=["Qty","PartNo","Brand","Segment","VehicleBrand","Model","Description","Remove"]; document.querySelector("#orderTable thead").innerHTML="<tr>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr>"; document.querySelector("#orderTable tbody").innerHTML=orderItems.length?orderItems.map((it,i)=>`<tr><td><div class="qtyBox"><button class="qtyBtn" onclick="orderQty(${i},-1)">-</button><input class="qtyInput" value="${it.qty}" readonly><button class="qtyBtn" onclick="orderQty(${i},1)">+</button></div></td><td>${escapeHtml(getVal(it.row,"partno"))}</td><td>${escapeHtml(getVal(it.row,"brand"))}</td><td>${escapeHtml(getVal(it.row,"segment"))}</td><td>${escapeHtml(getVal(it.row,"vehiclebrand"))}</td><td>${escapeHtml(getVal(it.row,"model"))}</td><td>${escapeHtml(getVal(it.row,"description"))}</td><td><button class="danger" onclick="removeOrder(${i})">X</button></td></tr>`).join(""):`<tr><td class="empty" colspan="${cols.length}">अभी कोई product add नहीं है</td></tr>`}
+function orderQty(i,d){orderItems[i].qty=Math.max(1,orderItems[i].qty+d); renderOrder()}
+function removeOrder(i){orderItems.splice(i,1); renderOrder()}
+function clearOrder(){orderItems=[]; renderOrder()}
+
+function createOrderPdfBlob(){if(!orderItems.length){alert("पहले products add करें");return null} const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:"portrait",unit:"pt",format:"a4"}); const total=orderItems.reduce((s,i)=>s+i.qty,0); if(logoDataURL){try{doc.addImage(logoDataURL,"PNG",40,25,90,55)}catch(e){}} doc.setFontSize(18); doc.text("ORDER READY",150,45); doc.setFontSize(10); doc.text("GST No: 24AAMFR1478D1Z7",150,63); doc.text("Date: "+document.getElementById("orderDate").value,150,79); doc.text("Customer: "+document.getElementById("customerName").value,150,95); if(document.getElementById("customerMobile").value)doc.text("Mobile: "+document.getElementById("customerMobile").value,150,111); doc.text("Total Quantity: "+total,40,130); const remark=document.getElementById("orderRemark")?.value||""; if(remark) doc.text("Remark: "+remark,40,145); doc.autoTable({startY:150,head:[["#","Product Code","Product Description","Qty"]],body:orderItems.map((it,i)=>[i+1,getVal(it.row,"partno"),getVal(it.row,"description"),it.qty]),styles:{fontSize:9,cellPadding:5,overflow:"linebreak"},headStyles:{fillColor:[7,29,73]}}); return doc.output("blob")}
+function downloadOrderPdf(){const b=createOrderPdfBlob(); if(!b)return; const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="order-ready.pdf"; a.click()}
+function padText(value, width){
+  value = String(value ?? "");
+  if(value.length > width) return value.slice(0, width-1) + "…";
+  return value + " ".repeat(width - value.length);
+}
+
+function buildOrderText(){
+  const total=orderItems.reduce((s,i)=>s+i.qty,0);
+  const customerFull=document.getElementById("customerName").value || "";
+  const mobile=document.getElementById("customerMobile").value || "";
+  const remark=document.getElementById("orderRemark")?.value || "";
+  let party=customerFull, city="";
+  if(customerFull.includes(" - ")){
+    const parts=customerFull.split(" - ");
+    party=parts[0] || customerFull;
+    city=parts.slice(1).join(" - ");
+  }
+
+  const line = "------------------------------------------------";
+  let text = "";
+  text += `Party Name : ${party}\n`;
+  text += `Mobile No. : ${mobile}\n`;
+  text += `City       : ${city}\n`;
+  text += `${line}\n`;
+  text += "```\n";
+  text += `${padText("No",4)}${padText("Part No",14)}${padText("Brand/Group",20)}${padText("Qty",5)}\n`;
+  text += `${padText("--",4)}${padText("-------",14)}${padText("-----------",20)}${padText("---",5)}\n`;
+
+  orderItems.forEach((it,i)=>{
+    const no = padText(String(i+1),4);
+    const part = padText(getVal(it.row,"partno"),14);
+    const brand = padText(getVal(it.row,"brand"),20);
+    const qty = padText(it.qty,5);
+    text += `${no}${part}${brand}${qty}\n`;
+  });
+
+  text += "```\n";
+  text += `${line}\n`;
+  text += `Total Qty  : ${total}\n`;
+  text += `Remark     : ${remark}\n`;
+  return text;
+}
+
+async function shareOrderWhatsApp(){
+  if(!ensureOrderReady()) return;
+  const text = encodeURIComponent(buildOrderText());
+
+  // Mobile will open WhatsApp app if available; desktop opens WhatsApp Web.
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isMobile){
+    window.location.href = "whatsapp://send?phone=918128660773&text=" + text;
+    setTimeout(()=>{
+      window.open("https://wa.me/918128660773?text=" + text, "_blank");
+    }, 800);
+  }else{
+    window.open("https://web.whatsapp.com/send?phone=918128660773&text=" + text, "_blank");
+  }
+}
+
+async function downloadOrderFiles(){
+  if(!ensureOrderReady()) return;
+  const pdfBlob = createOrderPdfBlob();
+  if(pdfBlob){
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(pdfBlob);
+    a.download="RAJ-GROUP-ORDER.pdf";
+    a.click();
+  }
+}
+
+function ensureOrderReady(){
+  if(!orderItems.length){
+    alert("पहले order में products add करें.");
+    return false;
+  }
+  return true;
+}
+
+function openWhatsAppWeb(){
+  if(!ensureOrderReady()) return;
+  const blob = createOrderPdfBlob();
+  if(blob){
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="RAJ-GROUP-ORDER.pdf";
+    a.click();
+  }
+  const shortText = encodeURIComponent(
+    "Order Ready PDF downloaded. Please attach RAJ-GROUP-ORDER.pdf here and send."
+  );
+  window.open("https://web.whatsapp.com/send?phone=918128660773&text=" + shortText, "_blank");
+}
+
+function openWhatsAppApp(){
+  if(!ensureOrderReady()) return;
+  const text = encodeURIComponent(buildOrderText());
+  window.location.href = "whatsapp://send?phone=918128660773&text=" + text;
+  setTimeout(()=>{
+    window.open("https://wa.me/918128660773?text=" + text, "_blank");
+  }, 900);
+}
+
+async function mobileShareOrder(){
+  if(!ensureOrderReady()) return;
+  const blob = createOrderPdfBlob();
+  if(!blob) return;
+  const file = new File([blob], "RAJ-GROUP-ORDER.pdf", {type:"application/pdf"});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({
+        title:"RAJ GROUP Order PDF",
+        text:"RAJ GROUP Order PDF",
+        files:[file]
+      });
+      return;
+    }catch(e){}
+  }
+  alert("इस browser में direct PDF share support नहीं है. PDF download होगी, फिर WhatsApp में manually attach करें.");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="RAJ-GROUP-ORDER.pdf";
+  a.click();
+  openWhatsAppApp();
+}
+
+
+async function shareOrderPdf(){const b=createOrderPdfBlob(); if(!b)return; const f=new File([b],"order-ready.pdf",{type:"application/pdf"}); if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({title:"Order Ready",text:"Order PDF attached",files:[f]});return}catch(e){}} downloadOrderPdf(); window.open("https://wa.me/918128660773?text="+encodeURIComponent(buildOrderText()),"_blank")}
+function downloadFilteredPriceBookPdf(){if(!filteredRows.length){alert("No matching products");return} const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:"landscape",unit:"pt",format:"a4"}); if(logoDataURL){try{doc.addImage(logoDataURL,"PNG",40,25,85,50)}catch(e){}} doc.setFontSize(16); doc.text("RAJ GROUP PRICE BOOK",145,40); doc.setFontSize(9); doc.text("GST No: 24AAMFR1478D1Z7",145,57); doc.text("Total Products: "+filteredRows.length.toLocaleString("en-IN"),40,95); doc.autoTable({startY:115,head:[["#","Code","Brand","Vehicle","Model","Description","Rate","MRP","GST","HSN"]],body:filteredRows.map((r,i)=>[i+1,getVal(r,"partno"),getVal(r,"brand"),getVal(r,"vehiclebrand"),getVal(r,"model"),getVal(r,"description"),getVal(r,"price"),getVal(r,"mrp"),getVal(r,"gst"),getVal(r,"hsn")]),styles:{fontSize:7,cellPadding:3,overflow:"linebreak"},headStyles:{fillColor:[7,29,73]}}); const a=document.createElement("a"); a.href=URL.createObjectURL(doc.output("blob")); a.download="filtered-price-book.pdf"; a.click()}
+
+function getSpeechApi(){return window.SpeechRecognition||window.webkitSpeechRecognition||null}
+function startVoiceSearch(inputId,autoCustomer,btn){const Api=getSpeechApi(); if(!Api){alert("Chrome में voice search support मिलेगा");return} const rec=new Api(); rec.lang="en-IN"; rec.onresult=e=>{document.getElementById(inputId).value=norm(e.results[0][0].transcript); if(inputId==="searchInput")applyFilters(false); if(autoCustomer){updateCustomerSuggestions();selectTypedCustomer()}}; rec.start()}
+
+document.getElementById("searchInput").addEventListener("input",()=>{showProductsAfterAdd=true; applyFilters(false)});
+document.getElementById("customerSearchInput").addEventListener("input",updateCustomerSuggestions);
+document.getElementById("customerSearchInput").addEventListener("keydown",e=>{if(e.key==="Enter")selectTypedCustomer()});
+document.getElementById("manualProductFile").addEventListener("change",async e=>{const f=e.target.files[0]; if(!f)return; const wb=readWorkbookFromArrayBuffer(await f.arrayBuffer()); const sh=wb.Sheets[wb.SheetNames[0]]; allRows=XLSX.utils.sheet_to_json(sh,{defval:""}); headers=allRows.length?Object.keys(allRows[0]):[]; filteredRows=[]; refreshAllMultis(); showProductsAfterAdd=false; applyFilters(false); setStatus("Loaded manual file: "+f.name)});
+
+async function init(){
+  document.getElementById("orderDate").value=new Date().toISOString().slice(0,10);
+  renderOrder();
+  await loadLogoDataUrl();
+
+  try{
+    const wb=await loadWorkbookFromPaths(PATHS.customers);
+    const sh=wb.Sheets[wb.SheetNames[0]];
+    customerRows=XLSX.utils.sheet_to_json(sh,{defval:""});
+    customerRows.sort((a,b)=>customerDisplay(a).localeCompare(customerDisplay(b)));
+    document.getElementById("selectedCustomerText").textContent="Loaded "+customerRows.length.toLocaleString("en-IN")+" customers";
+  }catch(e){
+    console.warn(e);
+    document.getElementById("selectedCustomerText").textContent="customers.csv not loaded";
+  }
+
+  try{
+    const wb=await loadWorkbookFromPaths(PATHS.pricebook);
+    const sh=wb.Sheets[wb.SheetNames[0]];
+    allRows=XLSX.utils.sheet_to_json(sh,{defval:""});
+    headers=allRows.length?Object.keys(allRows[0]):[];
+    filteredRows=allRows;
+    refreshAllMultis();
+    applyFilters(false);
+    setStatus("Loaded from folder: "+allRows.length.toLocaleString("en-IN")+" products");
+  }catch(e){
+    console.error(e);
+    setStatus("Local server required / data not found");
+    refreshAllMultis();
+    renderProducts();
+  }
+}
+init();
+</script>
+</body>
+</html>
