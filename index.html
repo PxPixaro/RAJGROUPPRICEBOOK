@@ -587,12 +587,6 @@ function clearOrder(){orderItems=[]; renderOrder()}
 
 
 function downloadOrderPdf(){const b=createOrderPdfBlob(); if(!b)return; const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="order-ready.pdf"; a.click()}
-function padText(value, width){
-  value = String(value ?? "");
-  if(value.length > width) return value.slice(0, width-1) + "…";
-  return value + " ".repeat(width - value.length);
-}
-
 function buildOrderText(){
   const total=orderItems.reduce((s,i)=>s+i.qty,0);
   const customerFull=document.getElementById("customerName").value || "";
@@ -605,25 +599,21 @@ function buildOrderText(){
     city=parts.slice(1).join(" - ");
   }
 
-  const line = "------------------------------------------------";
+  const line = "------------------------------";
   let text = "";
   text += `Party Name : ${party}\n`;
   text += `Mobile No. : ${mobile}\n`;
   text += `City       : ${city}\n`;
   text += `${line}\n`;
-  text += "```\n";
-  text += `${padText("No",4)}${padText("Part No",14)}${padText("Brand/Group",20)}${padText("Qty",5)}\n`;
-  text += `${padText("--",4)}${padText("-------",14)}${padText("-----------",20)}${padText("---",5)}\n`;
+  text += `No) Part No | Brand/Group | Qty\n`;
+  text += `${line}\n`;
 
   orderItems.forEach((it,i)=>{
-    const no = padText(String(i+1),4);
-    const part = padText(getVal(it.row,"partno"),14);
-    const brand = padText(getVal(it.row,"brand"),20);
-    const qty = padText(it.qty,5);
-    text += `${no}${part}${brand}${qty}\n`;
+    const part = getVal(it.row,"partno");
+    const brand = getVal(it.row,"brand");
+    text += `${i+1}) ${part} | ${brand} | Qty: ${it.qty}\n`;
   });
 
-  text += "```\n";
   text += `${line}\n`;
   text += `Total Qty  : ${total}\n`;
   text += `Remark     : ${remark}\n`;
