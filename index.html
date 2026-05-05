@@ -152,7 +152,7 @@ td{padding:10px;border-bottom:1px solid #eef2f7;font-size:13px;white-space:nowra
     <div><h2 style="margin:0;color:var(--dark-blue);font-size:20px;">Order Ready</h2><div><b>Total Quantity:</b> <span id="totalQty">0</span></div></div>
     <div class="orderActions">
       <button class="whatsapp" onclick="shareOrderWhatsApp()">Share Order WhatsApp</button>
-      <button class="secondary" onclick="downloadOrderFiles()">Download Order</button>
+      <button class="secondary" onclick="downloadOrderFiles()">Download Order PDF</button>
       <button class="danger" onclick="clearOrder()">Clear Order</button>
     </div>
   </div>
@@ -163,7 +163,7 @@ td{padding:10px;border-bottom:1px solid #eef2f7;font-size:13px;white-space:nowra
     <div style="grid-column:1/-1"><label>Remark</label><input type="text" id="orderRemark" placeholder="Order remark लिखें, optional"></div>
   </div>
   <div class="orderTableWrap"><table id="orderTable"><thead></thead><tbody></tbody></table></div>
-  <div class="smallText">Share Order WhatsApp अब text-only भेजेगा. Download Order से PDF download होगी.</div>
+  <div class="smallText">Share Order WhatsApp अब text-only भेजेगा. Download Order PDF से PDF download होगी.</div>
 </section>
 
 <section class="panel">
@@ -586,7 +586,199 @@ function clearOrder(){orderItems=[]; renderOrder()}
 
 
 
-function downloadOrderPdf(){const b=createOrderPdfBlob(); if(!b)return; const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="order-ready.pdf"; a.click()}
+function createOrderPdfBlob(){
+  if(!orderItems.length){
+    alert("पहले products add करें");
+    return null;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:"portrait", unit:"pt", format:"a4"});
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  const darkBlue = [7,29,73];
+  const blue = [11,78,162];
+  const orange = [244,123,32];
+  const lightBlue = [239,246,255];
+  const softGray = [248,250,252];
+  const borderGray = [188,204,225];
+
+  const gstNo = "24AAMFR1478D1Z7";
+  const orderDate = document.getElementById("orderDate").value || new Date().toISOString().slice(0,10);
+  const customerName = document.getElementById("customerName").value || "";
+  const customerMobile = document.getElementById("customerMobile").value || "";
+  const remark = document.getElementById("orderRemark")?.value || "";
+  const totalQty = orderItems.reduce((sum,i)=>sum + Number(i.qty || 0), 0);
+
+  function drawBorder(){
+    doc.setDrawColor(...darkBlue);
+    doc.setLineWidth(1.3);
+    doc.roundedRect(24, 22, pageW - 48, pageH - 44, 12, 12);
+    doc.setDrawColor(...orange);
+    doc.setLineWidth(2);
+    doc.line(44, pageH - 56, pageW - 44, pageH - 56);
+  }
+
+  drawBorder();
+
+  // Header box with logo color combination
+  doc.setFillColor(...lightBlue);
+  doc.roundedRect(40, 38, pageW - 80, 96, 10, 10, "F");
+  doc.setDrawColor(...orange);
+  doc.setLineWidth(4);
+  doc.line(40, 134, pageW - 40, 134);
+
+  if(logoDataURL){
+    try{ doc.addImage(logoDataURL, "PNG", 56, 52, 92, 58); }catch(e){}
+  }
+
+  doc.setTextColor(...darkBlue);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(23);
+  doc.text("ORDER READY", 168, 62);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10.5);
+  doc.text("GST No: " + gstNo, 168, 82);
+
+  // Date right side
+  doc.setFillColor(255,255,255);
+  doc.setDrawColor(...borderGray);
+  doc.setLineWidth(0.7);
+  doc.roundedRect(pageW - 180, 52, 126, 36, 6, 6, "FD");
+  doc.setTextColor(...darkBlue);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("DATE", pageW - 168, 65);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(orderDate, pageW - 168, 80);
+
+  // Customer box
+  const customerY = 154;
+  doc.setFillColor(255,255,255);
+  doc.setDrawColor(...blue);
+  doc.setLineWidth(0.9);
+  doc.roundedRect(44, customerY, pageW - 88, 92, 8, 8, "FD");
+
+  doc.setFillColor(...darkBlue);
+  doc.roundedRect(44, customerY, pageW - 88, 25, 8, 8, "F");
+  doc.rect(44, customerY + 12, pageW - 88, 13, "F");
+
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.text("CUSTOMER DETAILS", 58, customerY + 17);
+
+  doc.setTextColor(...darkBlue);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("Customer Name", 58, customerY + 45);
+
+  doc.setFontSize(12);
+  const customerLines = doc.splitTextToSize(customerName || "-", pageW - 150);
+  doc.text(customerLines, 58, customerY + 63);
+
+  doc.setFontSize(10);
+  doc.text("Mobile Number", 58, customerY + 84);
+  doc.setFont("helvetica", "normal");
+  doc.text(customerMobile || "-", 150, customerY + 84);
+
+  const body = orderItems.map((item, idx)=>[
+    idx + 1,
+    getVal(item.row, "partno"),
+    getVal(item.row, "description"),
+    item.qty
+  ]);
+
+  doc.autoTable({
+    startY: 270,
+    margin: {left: 44, right: 44},
+    head: [["#", "Product Code", "Product Description", "Qty"]],
+    body,
+    theme: "grid",
+    tableLineColor: darkBlue,
+    tableLineWidth: 0.6,
+    styles: {
+      fontSize: 9,
+      cellPadding: 6,
+      lineColor: borderGray,
+      lineWidth: 0.5,
+      textColor: [18,32,52],
+      valign: "middle"
+    },
+    headStyles: {
+      fillColor: darkBlue,
+      textColor: [255,255,255],
+      fontStyle: "bold",
+      lineColor: darkBlue,
+      lineWidth: 0.7
+    },
+    alternateRowStyles: { fillColor: softGray },
+    columnStyles: {
+      0: {cellWidth: 34, halign: "center"},
+      1: {cellWidth: 104, fontStyle: "bold"},
+      2: {cellWidth: pageW - 88 - 34 - 104 - 55},
+      3: {cellWidth: 55, halign: "center", fontStyle: "bold"}
+    },
+    didDrawPage: function(){
+      drawBorder();
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(105,115,134);
+      doc.text("Generated by RAJ GROUP PRICE BOOK", 44, pageH - 34);
+      doc.text("Page " + doc.internal.getNumberOfPages(), pageW - 92, pageH - 34);
+    }
+  });
+
+  let y = doc.lastAutoTable.finalY + 18;
+  const summaryH = remark ? 92 : 56;
+
+  if(y + summaryH > pageH - 70){
+    doc.addPage();
+    drawBorder();
+    y = 54;
+  }
+
+  doc.setFillColor(...lightBlue);
+  doc.setDrawColor(...blue);
+  doc.setLineWidth(0.9);
+  doc.roundedRect(44, y, pageW - 88, summaryH, 8, 8, "FD");
+
+  doc.setTextColor(...darkBlue);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.text("TOTAL QUANTITY", 60, y + 30);
+
+  doc.setFillColor(...orange);
+  doc.roundedRect(pageW - 126, y + 12, 64, 30, 6, 6, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14);
+  doc.text(String(totalQty), pageW - 94, y + 32, {align:"center"});
+
+  if(remark){
+    doc.setTextColor(...darkBlue);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.text("Remark", 60, y + 62);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(18,32,52);
+    const remarkLines = doc.splitTextToSize(remark, pageW - 150);
+    doc.text(remarkLines, 118, y + 62);
+  }
+
+  return doc.output("blob");
+}
+
+function downloadOrderPdf(){
+  const blob = createOrderPdfBlob();
+  if(!blob) return;
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="RAJ-GROUP-ORDER.pdf";
+  a.click();
+}
 function buildOrderText(){
   const total=orderItems.reduce((s,i)=>s+i.qty,0);
   const customerFull=document.getElementById("customerName").value || "";
@@ -636,15 +828,8 @@ async function shareOrderWhatsApp(){
   }
 }
 
-async function downloadOrderFiles(){
-  if(!ensureOrderReady()) return;
-  const pdfBlob = createOrderPdfBlob();
-  if(pdfBlob){
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(pdfBlob);
-    a.download="RAJ-GROUP-ORDER.pdf";
-    a.click();
-  }
+async async function downloadOrderFiles(){
+  downloadOrderPdf();
 }
 
 function ensureOrderReady(){
@@ -703,7 +888,15 @@ async function mobileShareOrder(){
 }
 
 
-async function shareOrderPdf(){const b=createOrderPdfBlob(); if(!b)return; const f=new File([b],"order-ready.pdf",{type:"application/pdf"}); if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({title:"Order Ready",text:"Order PDF attached",files:[f]});return}catch(e){}} downloadOrderPdf(); window.open("https://wa.me/918128660773?text="+encodeURIComponent(buildOrderText()),"_blank")}
+async async function shareOrderPdf(){
+  const blob=createOrderPdfBlob();
+  if(!blob) return;
+  const f=new File([blob],"RAJ-GROUP-ORDER.pdf",{type:"application/pdf"});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){
+    try{await navigator.share({title:"Order Ready",text:"Order PDF attached",files:[f]});return}catch(e){}
+  }
+  downloadOrderPdf();
+}
 function downloadFilteredPriceBookPdf(){if(!filteredRows.length){alert("No matching products");return} const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:"landscape",unit:"pt",format:"a4"}); if(logoDataURL){try{doc.addImage(logoDataURL,"PNG",40,25,85,50)}catch(e){}} doc.setFontSize(16); doc.text("RAJ GROUP PRICE BOOK",145,40); doc.setFontSize(9); doc.text("GST No: 24AAMFR1478D1Z7",145,57); doc.text("Total Products: "+filteredRows.length.toLocaleString("en-IN"),40,95); doc.autoTable({startY:115,head:[["#","Code","Brand","Vehicle","Model","Description","Rate","MRP","GST","HSN"]],body:filteredRows.map((r,i)=>[i+1,getVal(r,"partno"),getVal(r,"brand"),getVal(r,"vehiclebrand"),getVal(r,"model"),getVal(r,"description"),getVal(r,"price"),getVal(r,"mrp"),getVal(r,"gst"),getVal(r,"hsn")]),styles:{fontSize:7,cellPadding:3,overflow:"linebreak"},headStyles:{fillColor:[7,29,73]}}); const a=document.createElement("a"); a.href=URL.createObjectURL(doc.output("blob")); a.download="filtered-price-book.pdf"; a.click()}
 
 function getSpeechApi(){return window.SpeechRecognition||window.webkitSpeechRecognition||null}
