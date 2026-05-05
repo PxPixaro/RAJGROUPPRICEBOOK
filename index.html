@@ -152,7 +152,7 @@ td{padding:10px;border-bottom:1px solid #eef2f7;font-size:13px;white-space:nowra
     <div><h2 style="margin:0;color:var(--dark-blue);font-size:20px;">Order Ready</h2><div><b>Total Quantity:</b> <span id="totalQty">0</span></div></div>
     <div class="orderActions">
       <button class="whatsapp" onclick="shareOrderWhatsApp()">Share Order WhatsApp</button>
-      <button class="secondary" onclick="downloadOrderFiles()">Download Order PDF</button>
+      <button class="secondary" onclick="downloadOrderPdf()">Download Order PDF</button>
       <button class="danger" onclick="clearOrder()">Clear Order</button>
     </div>
   </div>
@@ -772,12 +772,23 @@ function createOrderPdfBlob(){
 }
 
 function downloadOrderPdf(){
-  const blob = createOrderPdfBlob();
-  if(!blob) return;
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="RAJ-GROUP-ORDER.pdf";
-  a.click();
+  try{
+    const blob = createOrderPdfBlob();
+    if(!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "RAJ-GROUP-ORDER.pdf";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }catch(err){
+    console.error(err);
+    alert("PDF download error: " + (err.message || err));
+  }
 }
 function buildOrderText(){
   const total=orderItems.reduce((s,i)=>s+i.qty,0);
@@ -828,7 +839,7 @@ async function shareOrderWhatsApp(){
   }
 }
 
-async async function downloadOrderFiles(){
+async function downloadOrderFiles(){
   downloadOrderPdf();
 }
 
@@ -888,7 +899,7 @@ async function mobileShareOrder(){
 }
 
 
-async async function shareOrderPdf(){
+async function shareOrderPdf(){
   const blob=createOrderPdfBlob();
   if(!blob) return;
   const f=new File([blob],"RAJ-GROUP-ORDER.pdf",{type:"application/pdf"});
