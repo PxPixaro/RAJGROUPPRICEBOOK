@@ -500,12 +500,27 @@ function setProductView(v){
 }
 function renderProducts(){ setTimeout(updateVisibleSummary,0); const displayRows=getDisplayRows(); document.getElementById("totalCount").textContent=allRows.length.toLocaleString("en-IN"); document.getElementById("showingCount").textContent=displayRows.length.toLocaleString("en-IN"); const totalPages=Math.max(1,Math.ceil(displayRows.length/rowsPerPage)); if(currentPage>totalPages)currentPage=totalPages; const start=(currentPage-1)*rowsPerPage; const rows=displayRows.slice(start,start+rowsPerPage); document.getElementById("pageInfo").textContent=displayRows.length?`Showing ${start+1} - ${Math.min(start+rowsPerPage,displayRows.length)} of ${displayRows.length.toLocaleString("en-IN")} | Page ${currentPage} / ${totalPages}`:"Page 0 / 0";
  const cards=document.getElementById("productCards"), tableWrap=document.getElementById("productTableWrap"); if(!rows.length){cards.innerHTML='<div class="empty">Filter/Search select करें, products यहाँ दिखेंगे</div>'; document.querySelector("#dataTable tbody").innerHTML='<tr><td class="empty">No matching products</td></tr>'; return}
- if(productView==="card"){cards.style.display="grid"; tableWrap.style.display="none"; cards.innerHTML=rows.map(row=>{const idx=allRows.indexOf(row); const img=productImageUrl(row); return `<div class="productCard"><div class="productImg">${img?`<img src="${img}" onerror="this.style.display='none';this.parentNode.append('No Image')">`:"No Image"}</div><div class="productBody"><div class="productCode">${escapeHtml(getVal(row,"partno"))}</div><div class="productDesc">${escapeHtml(getVal(row,"description"))}</div><div class="productMeta">${[meta(row,"Brand","brand"),meta(row,"Segment","segment"),meta(row,"Vehicle","vehiclebrand"),meta(row,"Model","model"),meta(row,"Unit","packsize"),meta(row,"Packing","packing"),meta(row,"Rate","price"),meta(row,"MRP","mrp"),meta(row,"GST","gst"),meta(row,"HSN","hsn")].filter(Boolean).join("")}</div><div class="cardActions"><div class="qtyBox"><button class="qtyBtn" onclick="changeRowQty(${idx},-1)">-</button><input class="qtyInput" id="qty_${idx}" type="number" min="1" value="1" oninput="updateVisibleSummary()"><button class="qtyBtn" onclick="changeRowQty(${idx},1)">+</button></div><button class="addBtn" onclick="addToOrder(${idx})">Add</button></div></div></div>`}).join(""); return}
- cards.style.display="none"; tableWrap.style.display="block"; const cols=["Image","Qty","Add"].concat(headers); document.querySelector("#dataTable thead").innerHTML="<tr>"+cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")+"</tr>"; document.querySelector("#dataTable tbody").innerHTML=rows.map(row=>{const idx=allRows.indexOf(row), img=productImageUrl(row); return "<tr>"+`<td>${img?`<img src="${img}" style="width:55px;height:55px;object-fit:contain">`:""}</td><td><div class="qtyBox"><button class="qtyBtn" onclick="changeRowQty(${idx},-1)">-</button><input class="qtyInput" id="qty_${idx}" type="number" min="1" value="1" oninput="updateVisibleSummary()"><button class="qtyBtn" onclick="changeRowQty(${idx},1)">+</button></div></td><td><button class="addBtn" onclick="addToOrder(${idx})">Add</button></td>`+headers.map(h=>`<td>${escapeHtml(row[h])}</td>`).join("")+"</tr>"}).join("")}
+ if(productView==="card"){cards.style.display="grid"; tableWrap.style.display="none"; cards.innerHTML=rows.map(row=>{const idx=allRows.indexOf(row); const img=productImageUrl(row); return `<div class="productCard"><div class="productImg">${img?`<img src="${img}" onerror="this.style.display='none';this.parentNode.append('No Image')">`:"No Image"}</div><div class="productBody"><div class="productCode">${escapeHtml(getVal(row,"partno"))}</div><div class="productDesc">${escapeHtml(getVal(row,"description"))}</div><div class="productMeta">${[meta(row,"Brand","brand"),meta(row,"Segment","segment"),meta(row,"Vehicle","vehiclebrand"),meta(row,"Model","model"),meta(row,"Unit","packsize"),meta(row,"Packing","packing"),meta(row,"Rate","price"),meta(row,"MRP","mrp"),meta(row,"GST","gst"),meta(row,"HSN","hsn")].filter(Boolean).join("")}</div><div class="cardActions"><div class="qtyBox"><button class="qtyBtn" onclick="changeRowQty(${idx},-1)">-</button><input class="qtyInput" id="qty_${idx}" type="number" min="0" value="${getOrderQtyForRow(row)}" oninput="syncRowQtyInput(${idx})"><button class="qtyBtn" onclick="changeRowQty(${idx},1)">+</button></div></div></div></div>`}).join(""); return}
+ cards.style.display="none"; tableWrap.style.display="block"; const cols=["Image","Qty"].concat(headers); document.querySelector("#dataTable thead").innerHTML="<tr>"+cols.map(c=>`<th>${escapeHtml(c)}</th>`).join("")+"</tr>"; document.querySelector("#dataTable tbody").innerHTML=rows.map(row=>{const idx=allRows.indexOf(row), img=productImageUrl(row); return "<tr>"+`<td>${img?`<img src="${img}" style="width:55px;height:55px;object-fit:contain">`:""}</td><td><div class="qtyBox"><button class="qtyBtn" onclick="changeRowQty(${idx},-1)">-</button><input class="qtyInput" id="qty_${idx}" type="number" min="0" value="${getOrderQtyForRow(row)}" oninput="syncRowQtyInput(${idx})"><button class="qtyBtn" onclick="changeRowQty(${idx},1)">+</button></div></td>`+headers.map(h=>`<td>${escapeHtml(row[h])}</td>`).join("")+"</tr>"}).join("")}
 function goPage(a){const displayRows=getDisplayRows(); const totalPages=Math.max(1,Math.ceil(displayRows.length/rowsPerPage)); if(a==="first")currentPage=1;if(a==="prev")currentPage=Math.max(1,currentPage-1);if(a==="next")currentPage=Math.min(totalPages,currentPage+1);if(a==="last")currentPage=totalPages;renderProducts()}
 
-function changeRowQty(i,d){const el=document.getElementById("qty_"+i); if(!el)return; let v=parseInt(el.value||"1")+d; if(v<1)v=1; el.value=v; updateVisibleSummary()}
+function changeRowQty(i,d){const el=document.getElementById("qty_"+i); if(!el)return; let v=parseInt(el.value||"0")+d; if(v<0)v=0; el.value=v; syncOrderQty(i,v); updateVisibleSummary()}
+function syncRowQtyInput(i){const el=document.getElementById("qty_"+i); if(!el)return; let v=Math.max(0,parseInt(el.value||"0")); el.value=v; syncOrderQty(i,v); updateVisibleSummary()}
 function rowKey(row){return [getVal(row,"partno"),getVal(row,"brand"),getVal(row,"description")].join("|")}
+function getOrderQtyForRow(row){const ex=orderItems.find(x=>x.k===rowKey(row)); return ex ? ex.qty : 0}
+function syncOrderQty(i,qty){
+  const row=allRows[i];
+  if(!row) return;
+  const name=norm(document.getElementById("customerName").value || document.getElementById("customerSearchInput")?.value || "");
+  if(!name && qty>0){ alert("पहले Customer name लिखें"); const el=document.getElementById("qty_"+i); if(el) el.value=0; return; }
+  if(name) document.getElementById("customerName").value=name;
+  const k=rowKey(row);
+  const pos=orderItems.findIndex(x=>x.k===k);
+  if(qty<=0){ if(pos>=0) orderItems.splice(pos,1); renderOrder(); return; }
+  if(pos>=0) orderItems[pos].qty=qty;
+  else orderItems.push({k,row,qty});
+  renderOrder();
+}
 
 function getCurrentVisibleRows(){
   const displayRows = getDisplayRows();
@@ -546,10 +561,11 @@ function addAllVisibleToOrder(){
   }
   rows.forEach(row=>{
     const idx=allRows.indexOf(row);
-    const qty=Math.max(1,parseInt(document.getElementById("qty_"+idx)?.value||"1"));
+    const qty=Math.max(0,parseInt(document.getElementById("qty_"+idx)?.value||"0"));
+    if(qty<=0) return;
     const k=rowKey(row);
     const ex=orderItems.find(x=>x.k===k);
-    if(ex) ex.qty+=qty;
+    if(ex) ex.qty=qty;
     else orderItems.push({k,row,qty});
   });
   renderOrder();
@@ -563,7 +579,7 @@ function updateVisibleSummary(){
   let qtyTotal = 0;
   rows.forEach(row=>{
     const idx=allRows.indexOf(row);
-    qtyTotal += Math.max(1,parseInt(document.getElementById("qty_"+idx)?.value||"1"));
+    qtyTotal += Math.max(1,parseInt(document.getElementById("qty_"+idx)?.value||"0"));
   });
   const el=document.getElementById("visibleSummary");
   if(el) el.textContent = `Visible products: ${rows.length} | Qty total: ${qtyTotal}`;
