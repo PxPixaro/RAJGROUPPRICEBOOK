@@ -914,7 +914,7 @@ function getSpeechApi(){return window.SpeechRecognition||window.webkitSpeechReco
 function startVoiceSearch(inputId,autoCustomer,btn){const Api=getSpeechApi(); if(!Api){alert("Chrome में voice search support मिलेगा");return} const rec=new Api(); rec.lang="en-IN"; rec.onresult=e=>{document.getElementById(inputId).value=norm(e.results[0][0].transcript); if(inputId==="searchInput")applyFilters(false); if(autoCustomer){applySelectedCustomer()}}; rec.start()}
 
 document.getElementById("searchInput").addEventListener("input",()=>{showProductsAfterAdd=true; applyFilters(false)});
-document.getElementById("customerSearchInput").addEventListener("input",()=>{ applySelectedCustomer(); }); });
+document.getElementById("customerSearchInput").addEventListener("input",()=>{ applySelectedCustomer(); });
 document.getElementById("customerSearchInput").addEventListener("keydown",e=>{if(e.key==="Enter")selectTypedCustomer()});
 
 async function init(){
