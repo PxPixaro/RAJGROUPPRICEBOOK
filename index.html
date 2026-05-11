@@ -96,12 +96,10 @@ td{padding:10px;border-bottom:1px solid #eef2f7;font-size:13px;white-space:nowra
 <section class="panel">
   <h2 style="margin:0 0 12px;color:var(--dark-blue);font-size:20px;">Customer Selection</h2>
   <div class="voiceWrap">
-    <input type="text" id="customerSearchInput" placeholder="Customer अपना पूरा नाम लिखें..." autocomplete="new-password" oninput="applySelectedCustomer()">
+    <input type="text" id="customerSearchInput" placeholder="Customer अपना पूरा नाम manually लिखें..." autocomplete="off" oninput="applySelectedCustomer()">
     <button class="micBtn" type="button" onclick="startVoiceSearch('customerSearchInput', true, this)">🎤</button>
     <button onclick="selectTypedCustomer()">Select Customer</button>
   </div>
-  <div class="stats"><div class="stat">Selected Customer: <strong id="selectedCustomerText">Not selected</strong></div></div>
-  <p class="hint">Customer name manual रहेगा. कोई CSV customer dropdown/list नहीं आएगी.</p>
 </section>
 
 <section class="panel">
@@ -189,7 +187,7 @@ const PATHS = {
 };
 const IMAGE_MANIFEST = {"aa1001": "AA1001.png", "aa1002": "AA1002.png", "aa1004": "AA1004.png", "aa1005": "AA1005.png", "aa1006": "AA1006.png", "aa1007": "AA1007.png", "aa1008": "AA1008.png", "aa1009": "AA1009.png", "aa1010": "AA1010.png", "aa1011": "AA1011.png", "aa1012": "AA1012.png", "aa1013": "AA1013.png", "aa1014": "AA1014.png", "aa1015": "AA1015.png", "aa1016": "AA1016.png", "aa1017": "AA1017.png", "aa1018": "AA1018.png", "aa1019": "AA1019.png", "aa1020": "AA1020.png", "aa1021": "AA1021.png", "aa1022": "AA1022.png", "aa1023": "AA1023.png", "aa1024": "AA1024.png", "aa1025": "AA1025.png", "aa1026": "AA1026.png", "aa1027": "AA1027.png", "aa1029": "AA1029.png", "aa1031": "AA1031.png", "aa1032": "AA1032.png", "aa1033": "AA1033.png", "aa1035": "AA1035.png", "aa1036": "AA1036.png", "aa1037": "AA1037.png", "aa1038": "AA1038.png", "aa1039": "AA1039.png", "aa1041": "AA1041.png", "aa1042": "AA1042.png", "aa1043": "AA1043.png", "aa1045": "AA1045.png", "aa1046": "AA1046.png", "aa2001": "AA2001.png", "aa2002": "AA2002.png", "aa2003": "AA2003.png", "aa201": "AA201.png", "aa202": "AA202.png", "aa203": "AA203.png", "aa2601": "AA2601.png", "aa3001": "AA3001.png", "aa3002": "AA3002.png", "aa3003": "AA3003.png", "aa3004": "AA3004.png", "aa3005": "AA3005.png", "aa3006": "AA3006.png", "aa3007": "AA3007.png", "aa3008": "AA3008.png", "aa3009": "AA3009.png", "aa301": "AA301.png", "aa3010": "AA3010.png", "aa3011": "AA3011.png", "aa3012": "AA3012.png", "aa3013": "AA3013.png", "aa3014": "AA3014.png", "aa3015": "AA3015.png", "aa3017": "AA3017.png", "aa3018": "AA3018.png", "aa3020": "AA3020.png", "aa3021": "AA3021.png", "aa3022": "AA3022.png", "aa3023": "AA3023.png", "aa3024": "AA3024.png", "aa3025": "AA3025.png", "aa3026": "AA3026.png", "aa4001": "AA4001.png", "aa4002": "AA4002.png", "aa4003": "AA4003.png", "aa5001": "AA5001.png", "aa6001": "AA6001.png", "aa6003": "AA6003.png", "aa601": "AA601.png", "aa602": "AA602.png", "aa603": "AA603.png", "aa604": "AA604.png", "aa605": "AA605.png", "aa606": "AA606.png", "aa7001": "AA7001.png", "aa7002": "AA7002.png", "aa7003": "AA7003.png", "aa7004": "AA7004.png", "aa7005": "AA7005.png", "aa7006": "AA7006.png", "aa7007": "AA7007.png", "aa7008": "AA7008.png", "aa7009": "AA7009.png", "aa7010": "AA7010.png", "aa7011": "AA7011.png", "aa7012": "AA7012.png", "aa7014": "AA7014.png", "aa7015": "AA7015.png", "aa7016": "AA7016.png", "aayubflywheelassy": "AAYUB FLYWHEEL ASSY.png", "aybfr002": "AYBFR002.png", "aybfr031": "AYBFR031.png", "aa2101": "aa2101.png"};
 
-let allRows=[], filteredRows=[], headers=[], customerRows=[], selectedCustomer=null, orderItems=[];
+let allRows=[], filteredRows=[], headers=[], orderItems=[];
 let currentPage=1, rowsPerPage=10, productView='table', logoDataURL=null;
 let resultSearchText='';
 let showProductsAfterAdd=false;
@@ -240,21 +238,14 @@ function readWorkbookFromArrayBuffer(data){return XLSX.read(data,{type:"array"})
 async function loadWorkbookFromPaths(paths){const data=await fetchFirst(paths); return readWorkbookFromArrayBuffer(data)}
 async function loadLogoDataUrl(){for(const url of PATHS.logo){try{const r=await fetch(url); if(!r.ok) continue; const b=await r.blob(); logoDataURL=await new Promise(res=>{const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(b)}); document.getElementById("mainLogo").src=url; return}catch(e){}}}
 
-function getCustomerVal(row,names){return ""}
-function customerDisplay(r){return ""}
-function updateCustomerSuggestions(){return}
-function pickCustomer(idx){return}
 function selectTypedCustomer(){
   const name = norm(document.getElementById("customerSearchInput").value);
   if(!name){alert("Customer name manually लिखें");return}
-  selectedCustomer = {manualName:name};
   applySelectedCustomer();
 }
 function applySelectedCustomer(){
-  const name = norm(document.getElementById("customerSearchInput").value) || selectedCustomer?.manualName || "";
-  document.getElementById("selectedCustomerText").textContent = name || "Not selected";
+  const name = norm(document.getElementById("customerSearchInput").value);
   document.getElementById("customerName").value = name;
-  document.getElementById("customerMobile").value = "";
 }
 
 function optionRowsFor(type){
@@ -923,20 +914,14 @@ function getSpeechApi(){return window.SpeechRecognition||window.webkitSpeechReco
 function startVoiceSearch(inputId,autoCustomer,btn){const Api=getSpeechApi(); if(!Api){alert("Chrome में voice search support मिलेगा");return} const rec=new Api(); rec.lang="en-IN"; rec.onresult=e=>{document.getElementById(inputId).value=norm(e.results[0][0].transcript); if(inputId==="searchInput")applyFilters(false); if(autoCustomer){applySelectedCustomer()}}; rec.start()}
 
 document.getElementById("searchInput").addEventListener("input",()=>{showProductsAfterAdd=true; applyFilters(false)});
-document.getElementById("customerSearchInput").addEventListener("input",()=>{ applySelectedCustomer(); });
+document.getElementById("customerSearchInput").addEventListener("input",()=>{ applySelectedCustomer(); }); });
 document.getElementById("customerSearchInput").addEventListener("keydown",e=>{if(e.key==="Enter")selectTypedCustomer()});
 
 async function init(){
   document.getElementById("orderDate").value=new Date().toISOString().slice(0,10);
   renderOrder();
   await loadLogoDataUrl();
-
-  // Customer CSV loading disabled: customer will type their own name manually.
-  customerRows=[];
-  selectedCustomer=null;
-  document.getElementById("selectedCustomerText").textContent="Not selected";
-
-  try{
+try{
     const wb=await loadWorkbookFromPaths(PATHS.pricebook);
     const sh=wb.Sheets[wb.SheetNames[0]];
     allRows=XLSX.utils.sheet_to_json(sh,{defval:""});
