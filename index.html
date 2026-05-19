@@ -846,12 +846,12 @@ async function shareOrderWhatsApp(){
   // Mobile will open WhatsApp app if available; desktop opens WhatsApp Web.
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   if(isMobile){
-    window.location.href = "whatsapp://send?phone=918128660773&text=" + text;
+    window.location.href = "whatsapp://send?phone=919033187554&text=" + text;
     setTimeout(()=>{
-      window.open("https://wa.me/918128660773?text=" + text, "_blank");
+      window.open("https://wa.me/919033187554?text=" + text, "_blank");
     }, 800);
   }else{
-    window.open("https://web.whatsapp.com/send?phone=918128660773&text=" + text, "_blank");
+    window.open("https://web.whatsapp.com/send?phone=919033187554&text=" + text, "_blank");
   }
 }
 
@@ -879,15 +879,15 @@ function openWhatsAppWeb(){
   const shortText = encodeURIComponent(
     "Order Ready PDF downloaded. Please attach RAJ-GROUP-ORDER.pdf here and send."
   );
-  window.open("https://web.whatsapp.com/send?phone=918128660773&text=" + shortText, "_blank");
+  window.open("https://web.whatsapp.com/send?phone=919033187554&text=" + shortText, "_blank");
 }
 
 function openWhatsAppApp(){
   if(!ensureOrderReady()) return;
   const text = encodeURIComponent(buildOrderText());
-  window.location.href = "whatsapp://send?phone=918128660773&text=" + text;
+  window.location.href = "whatsapp://send?phone=919033187554&text=" + text;
   setTimeout(()=>{
-    window.open("https://wa.me/918128660773?text=" + text, "_blank");
+    window.open("https://wa.me/919033187554?text=" + text, "_blank");
   }, 900);
 }
 
